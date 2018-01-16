@@ -57,8 +57,34 @@ contract Casino {
   }
 
   function generateNumberWinner() {
-    uint numberGenerated = block.number % 10 + 1 // This isn't secure
+    uint numberGenerated = block.number % 10 + 1; // This isn't secure
     distributePrizes(numberGenerated);
   }
-}
 
+  function distributePrizes(uint numberWinner) {
+    address[100] memory winners; // Temporary in memory address with fixed size
+    uint count = 0; // The count for the array of winners
+
+    for(uint i = 0; i < players.length; i++) {
+      address playerAddress = players[i];
+      if (playerInfo[playerAddress].numberSelected == numberWinner) {
+        winners[count] = playerAddress;
+        count++;
+      }
+      delete playerInfo[playerAddress]; // Delete all the players
+    }
+
+    players.length = 0; // Delete all the players array
+
+    uint winnerEtherAmount = totalBet / winners.length; // How much each winner gets
+
+    for(uint j = 0; j < count; j++) {
+      if (winners[j] != address(0)) { // Check that the address in this fixed array is not empty
+        winners[j].transfer(winnerEtherAmount);
+      }
+    }
+  }
+
+  // Falback function in case someone sends ether to the contract
+  function() payable {}
+}
