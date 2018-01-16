@@ -3,7 +3,7 @@ pragma solidity ^0.4.11; // 17
 contract Casino {
   address owner;
 
-  uint minimumBet;
+  uint public minimumBet;
   uint totalBet;
   uint numberOfBets;
   uint maxAmountOfBets = 100;
@@ -16,21 +16,21 @@ contract Casino {
 
   mapping(address => Player) playerInfo;
 
-  function Casino(uint _minimumBet) {
+  function Casino(uint _minimumBet) public {
     owner = msg.sender;
     if (_minimumBet != 0) {
       minimumBet = _minimumBet;
     }
   }
 
-  function kill() {
+  function kill() public {
     if (msg.sender == owner) {
       selfdestruct(owner);
     }
   }
 
   // To bet for a number between 1 and 10 both inclusive
-  function bet(uint number) payable {
+  function bet(uint number) public payable {
     assert(checkPlayerExists(msg.sender) == false);
     assert(number >= 1 && number <= 10);
     assert(msg.value >= minimumBet);
@@ -46,7 +46,7 @@ contract Casino {
     }
   }
 
-  function checkPlayerExists(address player) returns(bool) {
+  function checkPlayerExists(address player) constant returns(bool) {
     for(uint i = 0; i < players.length; i++) {
       if (players[i] == player) {
         return true;
@@ -56,12 +56,12 @@ contract Casino {
     return false;
   }
 
-  function generateNumberWinner() {
+  function generateNumberWinner() public {
     uint numberGenerated = block.number % 10 + 1; // This isn't secure
     distributePrizes(numberGenerated);
   }
 
-  function distributePrizes(uint numberWinner) {
+  function distributePrizes(uint numberWinner) public  {
     address[100] memory winners; // Temporary in memory address with fixed size
     uint count = 0; // The count for the array of winners
 
@@ -83,8 +83,16 @@ contract Casino {
         winners[j].transfer(winnerEtherAmount);
       }
     }
+    
+    resetData();
   }
 
   // Falback function in case someone sends ether to the contract
-  function() payable {}
+  function() public payable {}
+  
+  function resetData() public {
+   players.length = 0; // Delete all the players array
+   totalBet = 0;
+   numberOfBets = 0;
+  }
 }
